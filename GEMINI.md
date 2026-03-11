@@ -1,5 +1,6 @@
 # Gemini CLI Extension Context
 
+- **CRITICAL QUERY SYNTAX:** Before creating an OData query for the `property_search` tool, you MUST first inspect the `query` parameter's description to understand the data type of the fields you are using. For enumerated types (like `StandardStatus`), you MUST use the `ResourceEnums.TypeName'Value'` syntax. Using simple strings for enums will cause the query to fail. For example: `StandardStatus eq ResourceEnums.StandardStatus'Active'`.
 - This extension provides the `property_search` tool, which interfaces with an MLS (Multiple Listing Service) API to search for real estate listings and agent activities.
 - The `property_search` tool requires search conditions to be formatted as an **OData 4.0 standard** query string.
 - When a user asks to find properties, houses, or listings, you should autonomously use the `property_search` tool.
