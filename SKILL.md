@@ -35,22 +35,24 @@ Withdrawn Withdrawn**: The listing has been withdrawn from the market, but a con
     {"OHDateTime":"3/8 1:00 pm - 4:00 pm","OHHostedBy":"Bob","OHOpenHouseID":83071183},
 
 ## Query Construction Rules
-1. **No $filter Prefix**: DO NOT add "$filter=" into the query string. The underlying library will append this automatically. Provide only the condition expression itself (e.g., `Status eq 'Active'`).
+1. **No $filter Prefix**: DO NOT add "$filter=" into the query string. The underlying library will append this automatically. Provide only the condition expression itself (e.g., `StandardStatus eq ResourceEnums.StandardStatus'Active'`).
 2. **Field Selection & Data Formatting Validation**:
-   - The lists of available fields are provided in the `property_search` tool's description.
-   - Reference `mls.json` and the OData specification as your basic rules and high-level guidelines.
-   - **CRITICAL STEP**: You must practically check `sample.json` (provided in the tool's description) for correctness.
-     1. First, check if any fields in `mls.json` should be used.
-     2. Second, validate if the field is used in `sample.json`. If it is, observe exactly how this field is used and adhere to the exact data format shown in `sample.json` (for example, if `CloseDate` is formatted as `YYYY-MM-DD`, you must strictly use that format in your query).
-     3. Finally, if the field is *not* present in `sample.json`, fall back to using your common knowledge combined with the correct value format defined in `mls.json`. This validation process is critical to creating a working query string.
+   - **CRITICAL STEP**: All information needed for validation is embedded in the description of the `query` parameter for the `property_search` tool. You MUST use this embedded information. DO NOT attempt to read local files.
+   - The `query` parameter's description contains three critical pieces of information:
+     1. **`defined fields (from mls.json)`**: The complete schema of all available fields and their data types.
+     2. **`practically used fields (from valid.json)`**: A smaller, more reliable subset of fields that you should prioritize.
+     3. **`Sample data (from sample.json)`**: A JSON object demonstrating the exact data formats for fields. You must adhere to these formats (e.g., `YYYY-MM-DD` for dates).
+   - Your validation process is critical: First, check the `practically used fields`. If a field isn't there, check the `defined fields`. Finally, always verify the data format against the `Sample data`.
 3. **Field Meaningfulness**: Do not use unreliable fields like `DaysOnMarket`. Instead, use reliable proxies (e.g., to filter by time on the market, you must use `OnMarketDate` and `CloseDate`).
 4. **OData 4.0 Syntax**: Ensure all queries strictly adhere to the OData 4.0 specification.
    - Use correct logical operators (`eq`, `ne`, `gt`, `ge`, `lt`, `le`, `and`, `or`, `not`).
    - Include proper DateTime offset values for date and time fields.
    - Use proper string quoting and escaping.
-5. **Verify Data Types**: Before using a field in a query, check its data type in `mls.json`. Special attention is required for enumerated types. For example, the `City` field is of type `ResourceEnums.City`.
+5. **Verify Data Types**: Before using a field in a query, check its data type in the `defined fields` (from the `query` parameter's description). Special attention is required for enumerated types. For example, if the schema shows the `City` field is of type `ResourceEnums.City`, you must use that syntax.
    - **Correct:** `City eq ResourceEnums.City'Cupertino'`
    - **Incorrect:** `City eq 'Cupertino'`
+   - **Correct:** `StandardStatus eq ResourceEnums.StandardStatus'Active'`
+   - **Incorrect:** `StandardStatus eq 'Active'`
    Failing to use the correct syntax for the data type will result in an empty or failed query.
 
 ## Handling Outputs
