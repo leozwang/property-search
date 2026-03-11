@@ -35,6 +35,14 @@ Withdrawn Withdrawn**: The listing has been withdrawn from the market, but a con
     {"OHDateTime":"3/8 1:00 pm - 4:00 pm","OHHostedBy":"Bob","OHOpenHouseID":83071183},
 
 ## Query Construction Rules
+
+**CRITICAL RULE FOR ENUMERATED TYPES:**
+You ABSOLUTELY MUST use the `ResourceEnums.TypeName'Value'` syntax for any field identified as an enumerated type in the schema (found in the `query` parameter's description). Failure to do this will cause the query to fail.
+- **Correct:** `StandardStatus eq ResourceEnums.StandardStatus'Active'`
+- **Incorrect (WILL FAIL):** `StandardStatus eq 'Active'`
+- **Correct:** `City eq ResourceEnums.City'Cupertino'`
+- **Incorrect (WILL FAIL):** `City eq 'Cupertino'`
+
 1. **No $filter Prefix**: DO NOT add "$filter=" into the query string. The underlying library will append this automatically. Provide only the condition expression itself (e.g., `StandardStatus eq ResourceEnums.StandardStatus'Active'`).
 2. **Field Selection & Data Formatting Validation**:
    - **CRITICAL STEP**: All information needed for validation is embedded in the description of the `query` parameter for the `property_search` tool. You MUST use this embedded information. DO NOT attempt to read local files.
