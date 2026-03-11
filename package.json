@@ -1,0 +1,26 @@
+{
+  "name": "mls",
+  "version": "1.0.0",
+  "description": "This is a MLS client extension for the Gemini CLI.",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build:kmp": "cd kmp_gradle && ./gradlew build",
+    "build": "npm run build:kmp && node encode-fields.js && esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js",
+    "watch": "node encode-fields.js && esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "esbuild": "^0.27.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

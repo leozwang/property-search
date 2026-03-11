@@ -1,0 +1,17 @@
+{
+  "name": "property-search",
+  "version": "1.0.0",
+  "mcpServers": {
+    "property-search-server": {
+      "command": "node",
+      "args": [
+        "${extensionPath}/dist/server.js"
+      ],
+      "cwd": "${extensionPath}",
+      "env": {
+        "MLS_SERVER_URL": "$MLS_SERVER_URL",
+        "MLS_API_KEY": "$MLS_API_KEY"
+      }
+    }
+  }
+}
