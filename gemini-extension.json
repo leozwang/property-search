@@ -7,7 +7,11 @@
       "args": [
         "${extensionPath}/dist/server.js"
       ],
-      "cwd": "${extensionPath}"
+      "cwd": "${extensionPath}",
+      "env": {
+        "MLS_SERVER_URL": "",
+        "MLS_API_KEY": ""
+      }
     }
   }
 }
