@@ -5,7 +5,7 @@ Hello, {{args}}! This is the Property Search Gemini CLI Extension.
 You can use this extension to search for real estate properties using natural language.
 
 Here are some sample queries you can try:
-- "Can you find me properties with a lot size larger than 1 acre and is for sale?"
-- "Show me houses in Cupertino with more than 4 bedrooms."
+- "Can you find me properties with a lot size larger than 10 acre and is for sale?"
+- "Show me houses in Cupertino with more than 3 bedrooms and lot size is more than 9000 sqft."
 - "Find properties closed in last 30 days with a price greater than $5,500,000."
 """

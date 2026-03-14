@@ -5,8 +5,7 @@
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "build:kmp": "cd kmp_gradle && ./gradlew build",
-    "build": "npm run build:kmp && node encode-fields.js && esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js",
+    "build": "node encode-fields.js && esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js",
     "watch": "node encode-fields.js && esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
