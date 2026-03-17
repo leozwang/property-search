@@ -7706,7 +7706,7 @@ var require_version = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.version = void 0;
-    exports.version = "2.99.1";
+    exports.version = "2.99.2";
   }
 });
 
@@ -9903,7 +9903,7 @@ var require_version2 = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.version = void 0;
-    exports.version = "2.99.1";
+    exports.version = "2.99.2";
   }
 });
 
@@ -42124,9 +42124,10 @@ var StorageFileApi = class extends BaseApiClient {
     var _this8 = this;
     return _this8.handleOperation(async () => {
       let _path = _this8._getFinalPath(path);
-      let data = await post(_this8.fetch, `${_this8.url}/object/sign/${_path}`, _objectSpread22({ expiresIn }, (options === null || options === void 0 ? void 0 : options.transform) ? { transform: options.transform } : {}), { headers: _this8.headers });
+      const hasTransform = typeof (options === null || options === void 0 ? void 0 : options.transform) === "object" && options.transform !== null && Object.keys(options.transform).length > 0;
+      let data = await post(_this8.fetch, `${_this8.url}/object/sign/${_path}`, _objectSpread22({ expiresIn }, hasTransform ? { transform: options.transform } : {}), { headers: _this8.headers });
       const downloadQueryParam = (options === null || options === void 0 ? void 0 : options.download) ? `&download=${options.download === true ? "" : options.download}` : "";
-      const returnedPath = (options === null || options === void 0 ? void 0 : options.transform) && data.signedURL.includes("/object/sign/") ? data.signedURL.replace("/object/sign/", "/render/image/sign/") : data.signedURL;
+      const returnedPath = hasTransform && data.signedURL.includes("/object/sign/") ? data.signedURL.replace("/object/sign/", "/render/image/sign/") : data.signedURL;
       return { signedUrl: encodeURI(`${_this8.url}${returnedPath}${downloadQueryParam}`) };
     });
   }
@@ -42576,7 +42577,7 @@ var StorageFileApi = class extends BaseApiClient {
     return params.join("&");
   }
 };
-var version2 = "2.99.1";
+var version2 = "2.99.2";
 var DEFAULT_HEADERS = { "X-Client-Info": `storage-js/${version2}` };
 var StorageBucketApi = class extends BaseApiClient {
   constructor(url2, headers = {}, fetch$1, opts) {
@@ -43824,7 +43825,7 @@ var StorageClient = class extends StorageBucketApi {
 var import_auth_js = __toESM(require_main3(), 1);
 __reExport(dist_exports, __toESM(require_main2(), 1));
 __reExport(dist_exports, __toESM(require_main3(), 1));
-var version3 = "2.99.1";
+var version3 = "2.99.2";
 var JS_ENV = "";
 if (typeof Deno !== "undefined") JS_ENV = "deno";
 else if (typeof document !== "undefined") JS_ENV = "web";
@@ -44369,14 +44370,17 @@ async function getSupabaseCredentials() {
   }
   throw new Error("No credentials found in Supabase.");
 }
-async function performMlsSearch(baseUrl, apiKey, filterQuery) {
+async function performMlsSearch(baseUrl, apiKey, filterQuery, top = 10, selectFields = []) {
   const setName = "Property";
   const url2 = new URL(`${baseUrl}/${setName}`);
   url2.searchParams.append("$count", "true");
-  url2.searchParams.append("$top", "1");
+  url2.searchParams.append("$top", top.toString());
   url2.searchParams.append("$orderby", "OnMarketTimestamp desc");
   if (filterQuery) {
     url2.searchParams.append("$filter", filterQuery);
+  }
+  if (selectFields.length > 0) {
+    url2.searchParams.append("$select", selectFields.join(","));
   }
   const response = await fetch(url2.toString(), {
     headers: {
@@ -44399,20 +44403,15 @@ server.tool(
   async ({ query }) => {
     try {
       const { url: url2, key } = await getSupabaseCredentials();
-      const result = await performMlsSearch(url2, key, query);
+      const summaryFields = ["ListingId", "UnparsedAddress", "ListPrice", "BedroomsTotal", "BathroomsTotalInteger", "PropertyType", "PropertySubType", "LivingArea"];
+      const result = await performMlsSearch(url2, key, query, 100, summaryFields);
       try {
         const parsed = JSON.parse(result);
-        if (parsed.value && Array.isArray(parsed.value) && parsed.value.length > 0) {
-          const filteredProperty = Object.fromEntries(
-            Object.entries(parsed.value[0]).filter(([, value]) => {
-              return value !== null && value !== "" && value !== "null";
-            })
-          );
+        if (parsed.value && Array.isArray(parsed.value)) {
           const summary = {
-            "@odata.context": parsed["@odata.context"],
-            "@odata.count": parsed["@odata.count"],
-            "value": [filteredProperty],
-            "note": `Result truncated to the a single property. Total properties found: ${parsed["@odata.count"] || parsed.value.length}.`
+            "total_found": parsed["@odata.count"],
+            "properties": parsed.value,
+            "note": `Showing up to 100 property summaries. Total properties found: ${parsed["@odata.count"] || parsed.value.length}. Use the 'get_property_details' tool with a 'ListingKey' to get more information.`
           };
           return {
             content: [{ type: "text", text: JSON.stringify(summary, null, 2) }]
@@ -44435,3 +44434,35 @@ var transport = new StdioServerTransport();
 server.connect(transport).then(() => {
   console.error("Native MLS TypeScript MCP Server running");
 });
+async function getMlsPropertyDetails(baseUrl, apiKey, listingId) {
+  const filterQuery = `ListingId eq '${listingId}'`;
+  return performMlsSearch(baseUrl, apiKey, filterQuery, 1, []);
+}
+server.tool(
+  "get_property_details",
+  "Fetches all available details for a single property using its ListingId.",
+  {
+    listingId: external_exports3.string().describe("The ListingId of the property to retrieve.")
+  },
+  async ({ listingId }) => {
+    try {
+      const { url: url2, key } = await getSupabaseCredentials();
+      const result = await getMlsPropertyDetails(url2, key, listingId);
+      const parsed = JSON.parse(result);
+      if (!parsed.value || parsed.value.length === 0) {
+        return {
+          content: [{ type: "text", text: "Property not found." }],
+          isError: true
+        };
+      }
+      return {
+        content: [{ type: "text", text: JSON.stringify(parsed.value[0], null, 2) }]
+      };
+    } catch (error48) {
+      return {
+        content: [{ type: "text", text: `Error: ${error48.message || String(error48)}` }],
+        isError: true
+      };
+    }
+  }
+);
